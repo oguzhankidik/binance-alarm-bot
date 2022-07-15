@@ -1,133 +1,94 @@
 <template>
-  <div id="app">
-   <div class="row filter">
-     <label class="col-1"> Symbol: </label>
-     <input type="text" v-model="symbol" class="col">
-     <label class="col-1"> Limit: </label>
-     <input type="text" v-model="limit" class="col">
-     <button type="button" class="btn btn-primary ml-2" @click="updateTrades">Start</button>
-     <button type="button" class="btn btn-danger ml-2" @click="stopBot">Stop</button>
-
-   </div>
-    <div>
-      <div v-for="(items,index) in tradeList" :key="index">
-        <span class="buyer" :class="{seller : items.type}">price:  {{ items.price }} </span>
-        <span :class = "{active : checkLimit(items)}">qty:   {{ items.qty }} </span>
+  <div id="app" class="">
+    <div class="nav nav-tabs" id="nav-tab" role="tablist">
+      <a
+        v-for="tabcount in tabcount"
+        :key="tabcount"
+        class="nav-link"
+        :id="'nav-' + tabcount + '-tab'"
+        data-toggle="tab"
+        :href="'#nav-' + tabcount"
+        role="tab"
+        aria-controls="nav-profile"
+        aria-selected="false"
+      >
+        Tab: {{ tabcount }}
+      </a>
+    </div>
+    <div class="tab-content" id="nav-tabContent">
+      <div
+        v-for="tabcount in tabcount"
+        :key="tabcount"
+        class="tab-pane fade"
+        :id="'nav-' + tabcount"
+        role="tabpanel"
+        :aria-labelledby="'nav-' + tabcount + '-tab'"
+      >
+        <my-bot :tab-count="tabcount" />
       </div>
     </div>
-
+    <button
+      :disabled="!checks"
+      type="button"
+      class="btn-lg text-white btn-success ml-2 addButton"
+      @click="addBot"
+    >
+      ADD BOT
+    </button>
   </div>
 </template>
 
 <script>
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-
-
+import MyBot from "./components/myBot";
 export default {
-  name: 'App',
+  name: "App",
+  components: { MyBot },
   data: () => ({
-    url: 'https://api.binance.com/',
-    answer: '',
-    tradeList : [],
-    symbol : 'BNBUSDT',
-    limit : null,
-    interval : null,
-    firebaseConfig : {},
-    app : null,
-    analytics : null
+    tabcount: 1,
+    clicked: false,
   }),
 
-  computed:{
+  mounted() {
+    // this.$eventHub.$on('delete-bot',()=>{
+    //   console.log(this.$el.querySelectorAll('#myBot').length)
+    //   this.tabcount = this.$el.querySelectorAll('#myBot').length - 1
+    // })
 
+    this.$el.querySelector("#nav-1-tab").classList.add("active");
+    this.$el.querySelector("#nav-1").classList.add("show");
+    this.$el.querySelector("#nav-1").classList.add("active");
   },
-
-   mounted() {
-     this.firebaseConfig = {
-       apiKey: "AIzaSyAI-yup4qYvSMFtt0nlQfU0XN7Kq7lZPCc",
-       authDomain: "binance-alert-bot.firebaseapp.com",
-       projectId: "binance-alert-bot",
-       storageBucket: "binance-alert-bot.appspot.com",
-       messagingSenderId: "35516541304",
-       appId: "1:35516541304:web:453cc975531c714bbcc08d",
-       measurementId: "G-J15MSXZTHF"
-     };
-     this.app = initializeApp(this.firebaseConfig);
-     this.analytics = getAnalytics(this.app);
-  },
-
   methods: {
-    updateTrades(){
-     this.interval = window.setInterval(this.getBinance,1000)
+    addBot() {
+      this.checks() ? (this.tabcount += 1) : null;
     },
-    stopBot(){
-      window.clearInterval(this.interval)
+    checks() {
+      return this.$el.querySelectorAll("#myBot").length < 8;
     },
-
-    async getBinance() {
-      let query = 'api/v3/trades'
-      let params = {
-        symbol: this.symbol,
-        limit: 50
-      }
-
-      this.answer = await this.$axios.get(this.url + query, { params })
-      this.prepareData(this.answer.data)
-    },
-
-    prepareData(data) {
-      this.tradeList = []
-      data.forEach(item => {
-        let b = {
-          price : item.price,
-          qty : item.qty,
-          time : new Date(data.time).toLocaleString(),
-          id : item.id,
-          type : item.isBuyerMaker
-        }
-        this.tradeList.push(b)
-      })
-      this.tradeList.reverse()
-    },
-
-    checkLimit(item){
-      let value = this.round(item.qty,1)
-      return value > this.limit
-    },
-    round(value, precision) {
-      let multiplier = Math.pow(10, precision || 0);
-      return Math.round(value * multiplier) / multiplier;
-    }
-  }
-}
+  },
+};
 </script>
 
-<style lang="scss">
-#app{
-  padding: 20px;
+<style lang="scss" scoped>
+#app {
+  padding: 30px;
   margin: auto;
-  width: 50%;
 }
-span{
 
-  padding: 10px;
-  margin-right: 5px;
-  text-align: center;
-  line-height: 3;
+.row {
+  width: auto !important;
 }
-.active{
-  background-color: red;
+
+.addButton {
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
 }
-.seller{
-  color: red !important;
+a {
+  color: white;
 }
-.buyer{
-  color: green;
-}
-.filter{
-  label{
-    margin-top: 10px;
-  }
+.nav-link.active {
+  background: black;
+  color: white;
 }
 </style>
